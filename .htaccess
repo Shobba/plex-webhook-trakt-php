@@ -1,0 +1,9 @@
+RewriteEngine On
+RewriteRule \.htaccess - [F]
+RewriteRule \.gitignore - [F]
+RewriteRule config.php - [F]
+RewriteRule log.txt - [F]
+RewriteRule trakt_api_token.txt - [F]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.*)$ index.php?param=$1&%{QUERY_STRING} [L]

@@ -1,0 +1,7 @@
+<?php
+return array(
+    "ENCRYPTION_KEY"		=> "",
+    "TRAKT_CLIENT_ID"		=> "",
+    "TRAKT_CLIENT_SECRET"	=> ""
+);
+?>
