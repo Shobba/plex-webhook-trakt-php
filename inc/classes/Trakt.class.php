@@ -153,7 +153,7 @@ class Trakt {
 	private function pause($mediaObject) {
 		$data = $this->getMediaDataArray($mediaObject, 0);
 		$response = Post::send(self::$api_url . "/pause", $data, $this->getAuthArray());
-		Log::write("TRAKT START 0 - " . $response);
+		Log::write("TRAKT PAUSE 0 - " . $response);
 	}
 	
 	private function stop($mediaObject) {
@@ -167,7 +167,7 @@ class Trakt {
 		$response = Post::send(self::$api_url . "/stop", $data, $this->getAuthArray());
 		Log::write("TRAKT STOP 90 - " . $response);
 		$response = Post::send(self::$api_url . "/start", $data, $this->getAuthArray());
-		Log::write("TRAKT STOP 90 - " . $response);
+		Log::write("TRAKT START 90 - " . $response);
 	}
 }
 ?>
