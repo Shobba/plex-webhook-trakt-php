@@ -14,6 +14,8 @@ class Post {
 		curl_setopt($ch, CURLOPT_HTTPHEADER, self::prepareHeaders($header));
 		
 		$response = curl_exec($ch);
+		Log::write($response, "Curl");
+		
 		curl_close($ch);
 		
 		return $response;

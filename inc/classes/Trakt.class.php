@@ -28,7 +28,7 @@ class Trakt {
 	
 	public function action($event, $mediaObject, $player = NULL) {
 		$log = $this->plex_username . (!is_null($player) ? "		-		" . $player : "") . "		-		" . $event . (!in_array($event, array(PlexEvent::Resume, PlexEvent::Scrobble)) ? "	" : "") . "	-		" . $mediaObject->description();
-		Log::write($log);
+		Log::write($log, "PlexParser");
 		
 		switch($event) {
 			case PlexEvent::Play:
@@ -50,26 +50,33 @@ class Trakt {
 		}
 	}
 	
+	private function getRedirectURI() {
+		return str_replace($_SERVER['SCRIPT_URL'], "/authorize", $_SERVER['SCRIPT_URI']);
+	}
+	
 	public function authorize() {
-		header("LOCATION: https://trakt.tv/oauth/authorize?response_type=code&client_id=" . self::getClientID() . "&redirect_uri=" . urlencode(str_replace($_SERVER['SCRIPT_URL'], "/authorize", $_SERVER['SCRIPT_URI']) . "?plex_user=" . $this->plex_username) . "&state=state");
+		$url = "https://api.trakt.tv/oauth/authorize?response_type=code&client_id=" . self::getClientID() . "&redirect_uri=" . urlencode($this->getRedirectURI()) . "&state=" . $this->plex_username;
+		header("LOCATION: " . $url);
 	}
 	
 	public function writeAccessToken($code) {
 		$path = dirname(dirname(__FILE__)) . "/trakt_api_token.txt";
-		if(!file_exists($path)) file_put_contents($path, json_encode(array()));
+		if(!file_exists($path)) file_put_contents($path, json_encode(new stdClass()));
 		
 		$api_keys = json_decode(Encryption::decrypt(file_get_contents($path)));
+		if(empty($api_keys)) $api_keys = new stdClass();
 		
-		$trakt_response = Post::send("https://api.trakt.tv/oauth/token", array(
+		$params = array(
 			"code"			=> $code,
 			"client_id"		=> self::getClientID(),
 			"client_secret" => self::getClientSecret(),
-			"redirect_uri"	=> str_replace($_SERVER['SCRIPT_URL'], "/authorize", $_SERVER['SCRIPT_URI']) . "?plex_user=" . $this->plex_username,
+			"redirect_uri"	=> $this->getRedirectURI(),
 			"grant_type"	=> "authorization_code"
-		));
-		
+		);
+
+		$trakt_response = Post::send("https://api.trakt.tv/oauth/token", $params);
 		$api_keys->{$this->plex_username} = json_decode($trakt_response);
-		
+
 		file_put_contents($path, Encryption::encrypt(json_encode($api_keys)));
 	}
 	
@@ -81,17 +88,17 @@ class Trakt {
 		if(!isset($old->{$this->plex_username})) return false;
 		
 		if(time() + 24*60*60 > $old->{$this->plex_username}->created_at + $old->{$this->plex_username}->expires_in) {
-			
-			$trakt_response = Post::send("https://api.trakt.tv/oauth/token", array(
+			$params = array(
 				"refresh_token"	=> $old->{$this->plex_username}->refresh_token,
 				"client_id"		=> self::getClientID(),
 				"client_secret" => self::getClientSecret(),
-				"redirect_uri"	=> str_replace($_SERVER['SCRIPT_URL'], "/authorize", $_SERVER['SCRIPT_URI']) . "?plex_user=" . $this->plex_username,
-				"grant_type"	=> "authorization_code"
-			));
+				"redirect_uri"	=> $this->getRedirectURI(),
+				"grant_type"	=> "refresh_token"
+			);
+			$trakt_response = Post::send("https://api.trakt.tv/oauth/token", $params);
 			
 			$old->{$this->plex_username} = json_decode($trakt_response);
-			
+
 			file_put_contents($path, Encryption::encrypt(json_encode($old)));
 		}
 		
@@ -147,27 +154,27 @@ class Trakt {
 	private function start($mediaObject) {
 		$data = $this->getMediaDataArray($mediaObject, 0);
 		$response = Post::send(self::$api_url . "/start", $data, $this->getAuthArray());
-		Log::write("TRAKT START 0 - " . $response);
+		Log::write("TRAKT START 0 - " . $response, "Trakt");
 	}
 	
 	private function pause($mediaObject) {
 		$data = $this->getMediaDataArray($mediaObject, 0);
 		$response = Post::send(self::$api_url . "/pause", $data, $this->getAuthArray());
-		Log::write("TRAKT PAUSE 0 - " . $response);
+		Log::write("TRAKT PAUSE 0 - " . $response, "Trakt");
 	}
 	
 	private function stop($mediaObject) {
 		$data = $this->getMediaDataArray($mediaObject, 0);
 		$response = Post::send(self::$api_url . "/stop", $data, $this->getAuthArray());
-		Log::write("TRAKT STOP 0 - " . $response);
+		Log::write("TRAKT STOP 0 - " . $response, "Trakt");
 	}
 	
 	private function scrobble($mediaObject) {
 		$data = $this->getMediaDataArray($mediaObject, 90);
 		$response = Post::send(self::$api_url . "/stop", $data, $this->getAuthArray());
-		Log::write("TRAKT STOP 90 - " . $response);
+		Log::write("TRAKT STOP 90 - " . $response, "Trakt");
 		$response = Post::send(self::$api_url . "/start", $data, $this->getAuthArray());
-		Log::write("TRAKT START 90 - " . $response);
+		Log::write("TRAKT START 90 - " . $response, "Trakt");
 	}
 }
 ?>

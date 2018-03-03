@@ -26,7 +26,7 @@ if(Param::get(0) == "saved") {
 		
 		// Came back from trakt authorization website
 		
-		$trakt = new Trakt($_GET['plex_user']);
+		$trakt = new Trakt($_GET['state']);
 		$trakt->writeAccessToken($_GET['code']);
 		
 		header("LOCATION: /saved");
@@ -37,6 +37,8 @@ if(Param::get(0) == "saved") {
 	
 	// Got data from PLEX
 	
+	Log::write($_POST['payload'], "Payload");
+
 	$plex = json_decode($_POST['payload']);
 	$media = NULL;
 	
@@ -53,7 +55,7 @@ if(Param::get(0) == "saved") {
 		case PlexType::Movie:
 			$media = new Movie();
 			$media->title = $plex->Metadata->title;
-			$media->originalTitle = $plex->Metadata->originalTitle;
+			$media->originalTitle = !empty($plex->Metadata->originalTitle) ? $plex->Metadata->originalTitle : $plex->Metadata->title;
 			$media->summary = $plex->Metadata->summary;
 			$media->year = $plex->Metadata->year;
 			break;
