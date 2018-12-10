@@ -4,4 +4,3 @@ return array(
     "TRAKT_CLIENT_ID"		=> "",
     "TRAKT_CLIENT_SECRET"	=> ""
 );
-?>
