@@ -51,7 +51,7 @@ class Trakt {
 	}
 	
 	private function getRedirectURI() {
-		return str_replace($_SERVER['SCRIPT_URL'], "/authorize", $_SERVER['SCRIPT_URI']);
+		return $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'] . '/authorize';
 	}
 	
 	public function authorize() {

@@ -16,7 +16,9 @@ if(Param::get(0) == "saved") {
 		
 		// Redirect to trakt authorization website
 		
-		if(!Param::get(1)) throw new Exception("No PLEX username set (http://website.com/authorize/{plex_username}).");
+		if(!Param::get(1)) {
+            throw new \Exception("No PLEX username set (http://website.com/authorize/{plex_username}).");
+        }
 		
 		$trakt = new Trakt(Param::get(1));
 		$trakt->authorize();
@@ -66,4 +68,3 @@ if(Param::get(0) == "saved") {
 	
 	exit();
 }
-?>
